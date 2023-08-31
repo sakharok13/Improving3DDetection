@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "semi_once_small",
+            "type": "python",
+            "request": "launch",
+            "module": "semi_train",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${cwd}"
+            },
+            "cwd": "${workspaceFolder}/tools",
+            "args": [
+                "--cfg_file",
+                "${workspaceFolder}/tools/cfgs/once_models/semi_learning_models/proficient_teacher_second_small.yaml"
+            ]
+        }
+    ]
+}

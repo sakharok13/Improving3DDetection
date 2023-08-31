@@ -1,0 +1,4 @@
+outs:
+- md5: 93e9c6e73e1ff0af50f6367ddb247fe7
+  size: 12936771
+  path: scan_0.1_pretrain.tar

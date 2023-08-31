@@ -1,0 +1,26 @@
+from pathlib import Path
+import logging
+__base_dir = None
+
+def get_base_dir():
+    global __base_dir
+    if not __base_dir:
+        path = Path(__file__).parent.parent.parent
+        if not (path / 'PROJECT_root').exists():
+            logging.warning(f'PROJECT_root file not found in {path}')
+        __base_dir = str(path)
+    return __base_dir
+
+def check_gpu():
+    import torch
+    # setting device on GPU if available, else CPU
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print('Using device:', device)
+    print()
+
+    #Additional Info when using cuda
+    if device.type == 'cuda':
+        print(torch.cuda.get_device_name(0))
+        print('Memory Usage:')
+        print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
+        print('Cached:   ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')

@@ -1,0 +1,39 @@
+# Envirmoment
+venv/
+env/
+
+# IDE
+.idea
+.iml
+
+# Mac
+.DS_Store
+
+# Archives
+*.tar.gz
+*.whl
+*.zip
+*.tar
+
+# Trash
+__pycache__
+.pytest_cache/
+*pyc
+.coverage
+dist/
+build/
+tmp/
+*.iml
+*.log
+logs
+.ipynb_checkpoints
+*.html
+*.egg-info
+*.so
+other/
+.output
+.dvc/
+.nfs*
+output/
+data/
+*.pkl

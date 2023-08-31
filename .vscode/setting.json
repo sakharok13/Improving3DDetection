@@ -1,0 +1,18 @@
+{
+    "python.pythonPath": "venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "git.ignoreLimitWarning": true,
+    "python.formatting.autopep8Args": [
+        "--max-line-length=200"
+    ],
+    "python.linting.pylintEnabled": true,
+    "python.linting.pylintArgs": [
+        "--enable=W0614"
+    ],
+    "terminal.integrated.inheritEnv": false,
+    "python.jediEnabled": false,
+    "editor.links": true,
+    "python.languageServer": "Jedi",
+    "python.linting.enabled": false,
+    "terminal.integrated.env.linux": {"PYTHONPATH": "/home/jovyan/3d_detection"} 
+}

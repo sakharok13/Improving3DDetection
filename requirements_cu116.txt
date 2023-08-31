@@ -1,0 +1,8 @@
+numpy==1.21.6 # OpenPCDet limitations
+--extra-index-url https://download.pytorch.org/whl/cu116
+--extra-index-url https://download.pytorch.org/whl/cu116
+torch==1.12.1+cu116
+torchvision==0.13.1
+spconv-cu116
+tensorflow==2.5.0
+tensorboardX

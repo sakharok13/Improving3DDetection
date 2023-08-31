@@ -1,0 +1,4 @@
+outs:
+- md5: 2cfe84cebabea1e1dd9d475b17b2f733
+  size: 12893379
+  path: sun_0.05_pretrain.tar

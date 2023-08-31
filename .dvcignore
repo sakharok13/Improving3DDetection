@@ -1,0 +1,6 @@
+OpenPCDet/data/once/data
+OpenPCDet/data/waymo/raw_data
+OpenPCDet/data/waymo/waymo_processed_data_v0_5_0
+OpenPCDet/data/waymo/waymo_processed_data_v0_5_0_gt_database_train_sampled_1
+notebooks
+datacrawl

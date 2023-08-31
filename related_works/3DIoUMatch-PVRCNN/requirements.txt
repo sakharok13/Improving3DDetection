@@ -1,0 +1,8 @@
+numpy
+torch
+numba
+tensorboardX
+easydict
+pyyaml
+scikit-image
+tqdm

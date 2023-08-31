@@ -1,0 +1,248 @@
+CLASS_NAMES: ['Car', 'Bus', 'Truck', 'Pedestrian', 'Cyclist']
+
+USE_PRETRAIN_MODEL: True
+PRETRAIN_CKPT: /ssd/junbo/repository/SemiDet3D/output/once_models/sup_models/centerpoints/baseline/ckpt/checkpoint_epoch_80.pth
+CLOUD_PRETRAIN_CKPT: /home/work/user-job-dir/SemiDet3D/output/once_models/ckpt/checkpoint_xx.pth
+
+DATA_CONFIG: 
+    _BASE_CONFIG_: cfgs/dataset_configs/once_semi_dataset.yaml
+    LABELED_DATA_FOR: ['student']
+    UNLABELED_DATA_FOR: ['teacher', 'student']
+    DATA_SPLIT: {
+      'train': train,
+      'test': val,
+      'raw': raw_small,
+    }
+
+    TEACHER_AUGMENTOR:
+      DISABLE_AUG_LIST: ['random_world_scaling']
+      AUG_CONFIG_LIST:
+        - NAME: random_world_scaling
+          WORLD_SCALE_RANGE: [0.95, 1.05]
+
+    STUDENT_AUGMENTOR:
+      DISABLE_AUG_LIST: ['placeholder']
+      AUG_CONFIG_LIST:
+        - NAME: random_world_flip
+          ALONG_AXIS_LIST: ['x', 'y']
+
+        - NAME: random_world_rotation
+          WORLD_ROT_ANGLE: [-0.78539816, 0.78539816]
+
+        - NAME: random_world_scaling
+          WORLD_SCALE_RANGE: [0.95, 1.05]
+
+OPTIMIZATION:
+    PRETRAIN:
+        BATCH_SIZE_PER_GPU: 4
+        NUM_EPOCHS: 80
+        OPTIMIZER: adam_onecycle
+        LR: 0.003
+        WEIGHT_DECAY: 0.01
+        MOMENTUM: 0.9
+        MOMS: [0.95, 0.85]
+        PCT_START: 0.4
+        DIV_FACTOR: 10
+        DECAY_STEP_LIST: [35, 45]
+        LR_DECAY: 0.1
+        LR_CLIP: 0.0000001
+        LR_WARMUP: False
+        WARMUP_EPOCH: 1
+        GRAD_NORM_CLIP: 10
+
+    SEMI_SUP_LEARNING:
+        NAME: 3DIoUMatch
+        LD_BATCH_SIZE_PER_GPU: 1
+        UD_BATCH_SIZE_PER_GPU: 4
+        NUM_EPOCHS: 25 # 5 epoch
+
+        TEACHER:
+            NUM_ITERS_PER_UPDATE: -1
+
+            CLS_SCORE_THRESH: 0.1
+            IOU_SCORE_THRESH: [0.1, 0.1, 0.1, 0.1, 0.1]
+            NMS_CONFIG:
+                MULTI_CLASSES_NMS: False
+                NMS_TYPE: nms_gpu
+                NMS_THRESH: 0.01
+                NMS_PRE_MAXSIZE: 4096
+                NMS_POST_MAXSIZE: 500
+
+        STUDENT:
+            OPTIMIZER: adam_onecycle
+            LR: 0.001
+            WEIGHT_DECAY: 0.01
+            MOMENTUM: 0.9
+            MOMS: [0.95, 0.85]
+            PCT_START: 0.4
+            DIV_FACTOR: 10
+            DECAY_STEP_LIST: [35, 45]
+            LR_DECAY: 0.1
+            LR_CLIP: 0.0000001
+            LR_WARMUP: False
+            WARMUP_EPOCH: -1
+            GRAD_NORM_CLIP: 10
+
+    TEST:
+        BATCH_SIZE_PER_GPU: 4
+
+MODEL:
+    NAME: SemiCenterPointIoU
+
+    VFE:
+        NAME: MeanVFE
+
+    BACKBONE_3D:
+        NAME: VoxelResBackBone8x
+
+    MAP_TO_BEV:
+        NAME: HeightCompression
+        NUM_BEV_FEATURES: 256
+
+    BACKBONE_2D:
+        NAME: BaseBEVBackbone
+
+        LAYER_NUMS: [5, 5]
+        LAYER_STRIDES: [1, 2]
+        NUM_FILTERS: [128, 256]
+        UPSAMPLE_STRIDES: [1, 2]
+        NUM_UPSAMPLE_FILTERS: [256, 256]
+
+    DENSE_HEAD:
+      NAME: CenterHeadSemi
+      CLASS_AGNOSTIC: False
+      DATASET: once
+      MODE: 3d
+      USE_DCN: False
+      TASKS: &tasks_head
+        - num_class: 1
+          class_names: ["Car"]
+        - num_class: 1
+          class_names: ["Bus"]
+        - num_class: 1
+          class_names: ["Truck"]
+        - num_class: 1
+          class_names: ["Pedestrian"]
+        - num_class: 1
+          class_names: ["Cyclist"]
+
+      PARAMETERS:
+        share_conv_channel: 64
+        init_bias: -2.19
+        common_heads: {'reg': [2, 2], 'height': [1, 2], 'dim':[3, 2], 'rot':[2, 2]}
+
+      LOSS_CONFIG:
+        code_weights: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+        weight: 0.25
+
+      TARGET_ASSIGNER_CONFIG:
+        tasks: *tasks_head
+        out_size_factor: 8
+        dense_reg: 1
+        gaussian_overlap: 0.1
+        max_objs: 500
+        min_radius: 2
+        mapping: {
+          "Car": 1,
+          "Bus": 2,
+          "Truck": 3,
+          "Pedestrian": 4,
+          "Cyclist": 5
+        }
+
+      TEST_CONFIG:
+        post_center_limit_range: [-75.2, -75.2, -5.0, 75.2, 75.2, 3.0]
+        max_per_img: 500
+        score_threshold: 0.1
+        pc_range: [-75.2, -75.2]
+        out_size_factor: 8
+        voxel_size: [0.1, 0.1]
+        double_flip: False
+        nms:
+          train:
+            use_iou_3d_nms: True
+            use_rotate_nms: False
+            use_maxpool_nms: False
+            use_circle_nms: False
+            min_radius: [4, 10, 12, 0.175, 0.85]
+            nms_iou_threshold: 0.8
+            nms_pre_max_size: 1500
+            nms_post_max_size: 80
+          test:
+            use_iou_3d_nms: True
+            use_rotate_nms: False
+            use_maxpool_nms: False
+            use_circle_nms: False
+            min_radius: [4, 10, 12, 0.175, 0.85]
+            nms_iou_threshold: 0.01
+            nms_pre_max_size: 500
+            nms_post_max_size: 83
+
+    ROI_HEAD:
+        NAME: SemiSECONDHead
+        CLASS_AGNOSTIC: True
+
+        MIN_X: -75.2
+        MIN_Y: -75.2
+        VOXEL_SIZE_X: 0.1
+        VOXEL_SIZE_Y: 0.1
+
+        SHARED_FC: [256, 256]
+        IOU_FC: [256, 256]
+        DP_RATIO: 0.3
+
+        NMS_CONFIG:
+            TRAIN:
+                NMS_TYPE: nms_gpu
+                MULTI_CLASSES_NMS: False
+                NMS_PRE_MAXSIZE: 9000
+                NMS_POST_MAXSIZE: 512
+                NMS_THRESH: 0.8
+            TEST:
+                NMS_TYPE: nms_gpu
+                MULTI_CLASSES_NMS: False
+                NMS_PRE_MAXSIZE: 4096
+                NMS_POST_MAXSIZE: 256 #100 for kitti
+                NMS_THRESH: 0.7
+
+        ROI_GRID_POOL:
+            GRID_SIZE: 7
+            IN_CHANNEL: 512
+            DOWNSAMPLE_RATIO: 8
+
+        TARGET_CONFIG:
+            BOX_CODER: ResidualCoder
+            ROI_PER_IMAGE: 128
+            FG_RATIO: 0.5
+
+            SAMPLE_ROI_BY_EACH_CLASS: True
+            CLS_SCORE_TYPE: raw_roi_iou
+
+            CLS_FG_THRESH: 0.75
+            CLS_BG_THRESH: 0.25
+            CLS_BG_THRESH_LO: 0.1
+            HARD_BG_RATIO: 0.8
+
+            REG_FG_THRESH: 0.55
+
+        LOSS_CONFIG:
+            IOU_LOSS: BinaryCrossEntropy
+            LOSS_WEIGHTS: {
+                'rcnn_iou_weight': 1.0,
+                'code_weights': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+            }
+
+
+    POST_PROCESSING:
+      RECALL_THRESH_LIST: [0.3, 0.5, 0.7]
+      SCORE_THRESH: 0.1
+      OUTPUT_RAW_SCORE: False
+
+      EVAL_METRIC: once
+
+      NMS_CONFIG:
+        MULTI_CLASSES_NMS: False
+        NMS_TYPE: nms_gpu
+        NMS_THRESH: 0.01
+        NMS_PRE_MAXSIZE: 4096
+        NMS_POST_MAXSIZE: 500
