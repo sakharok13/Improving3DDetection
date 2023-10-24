@@ -5,9 +5,6 @@ ACTIVATE := $(BASE)/venv/bin/activate
 python := PYTHONPATH=$(BASE):${PYTHONPATH} \
  		  $(BASE)/venv/bin/python3
 
-export AWS_ACCESS_KEY_ID=u-ws-ao3th-pd11-24b
-export AWS_SECRET_ACCESS_KEY=QgpWocaaQeKHIjaW3Meg2Uve1v2FjBbZsDnE7qfB
-ENDPOINT = --endpoint-url=https://n-ws-ao3th-pd11.s3pd11.sbercloud.ru
 
 define upload
 	aws ${ENDPOINT} s3 sync --size-only --acl authenticated-read ${1}/ s3://b-ws-ao3th-pd11-5qk/once_dataset/${1}
